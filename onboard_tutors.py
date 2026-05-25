@@ -45,15 +45,37 @@ from bs4 import BeautifulSoup
 # Config
 # ---------------------------------------------------------------------------
 
+
+def _load_dotenv(path: str = ".env") -> None:
+    """Minimal .env loader so we don't need a runtime dependency."""
+    p = Path(__file__).parent / path
+    if not p.exists():
+        return
+    for line in p.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        os.environ.setdefault(key, value)
+
+
+_load_dotenv()
+
 FROG_BASE = "https://frogfluent.com"
 WISE_API = "https://api.wiseapp.live"
 NAMESPACE = "frogfluent-sample"
 
 INSTITUTE_ID = os.environ.get("WISE_INSTITUTE_ID", "6a10430bf464d10720e4f6be")
-BEARER = os.environ.get(
-    "WISE_BEARER_TOKEN",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YTEwNDMwYjVjOTFlOTQ4ZGY5NmQ1Y2UiLCJuYW1lIjoiRnJvZ2ZsdWVudCBBZG1pbiIsInR5cGUiOiJTRVNTSU9OX1RPS0VOIiwic2Vzc2lvbklkIjoiNmExMDQzMGJmNDY0ZDEwNzIwZTRmNmI5IiwiaWF0IjoxNzc5NDUwNjM1LCJleHAiOjE3ODcyMjY2MzV9.N8aG7uIJdYwWFMhb1frGzDGih75kPUKE1QQ6on3ynSs",
-)
+BEARER = os.environ.get("WISE_BEARER_TOKEN", "").strip()
+if not BEARER:
+    sys.stderr.write(
+        "ERROR: WISE_BEARER_TOKEN is not set.\n"
+        "  - Copy .env.example to .env and fill in the token, or\n"
+        "  - Export it: `export WISE_BEARER_TOKEN=...`\n"
+    )
+    sys.exit(1)
 EMAIL_DOMAIN = os.environ.get("EMAIL_DOMAIN", "tutors.frogfluent.test")
 
 WISE_HEADERS = {
