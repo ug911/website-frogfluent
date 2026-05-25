@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verifying payment — FrogFluent</title>
+<link rel="icon" href="assets/logo.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(180deg,#f5faf6 0%,#fff 100%)}
+  .ps-card{background:#fff;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.08);padding:40px;max-width:480px;width:90%;text-align:center}
+  .ps-icon{font-size:54px;margin-bottom:14px;line-height:1}
+  .ps-spinner{width:42px;height:42px;border:4px solid #eaf7ee;border-top-color:var(--green);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ps-card h1{font-family:'Poppins',sans-serif;font-size:24px;margin:6px 0 10px;font-weight:800}
+  .ps-card p{color:var(--muted);font-size:15px;margin:0 0 18px}
+  .ps-meta{font-size:12px;color:#94a3b8;margin-top:12px;word-break:break-all}
+</style>
+</head>
+<body>
+<div class="ps-card" id="ps-card">
+  <div class="ps-spinner"></div>
+  <h1>Verifying your payment…</h1>
+  <p>Hold on a moment while we confirm with Wise.</p>
+  <div class="ps-meta" id="ps-meta"></div>
+</div>
+
+<script>
+(async function () {
+  const card = document.getElementById('ps-card');
+  const meta = document.getElementById('ps-meta');
+
+  // URL pattern: /payment_status/<order_id>?redirectionUrl=<encoded relative path>
+  const pathParts = location.pathname.split('/').filter(Boolean);
+  const orderId = pathParts[pathParts.length - 1];
+  const params = new URLSearchParams(location.search);
+  const redirectionUrl = params.get('redirectionUrl') || '/tutors.html';
+
+  meta.textContent = `Order: ${orderId || 'unknown'}`;
+
+  function destination(status, ok) {
+    const url = new URL(redirectionUrl, location.origin);
+    url.searchParams.set('payment_order_id', orderId);
+    url.searchParams.set('payment_status', ok ? 'success' : 'failed');
+    if (status) url.searchParams.set('payment_state', status);
+    return url.toString();
+  }
+
+  function render(ok, status, message) {
+    card.innerHTML = `
+      <div class="ps-icon">${ok ? '✅' : '⚠️'}</div>
+      <h1>${ok ? 'Payment successful' : 'Payment not confirmed'}</h1>
+      <p>${message || ''}</p>
+      <a class="btn btn-primary btn-lg" href="${destination(status, ok)}">${ok ? 'Continue →' : 'Go back'}</a>
+      <div class="ps-meta">Order: ${orderId || 'unknown'}</div>
+    `;
+    setTimeout(() => { location.href = destination(status, ok); }, 1800);
+  }
+
+  if (!orderId) {
+    return render(false, '', 'Missing order reference.');
+  }
+
+  try {
+    const res = await fetch(`https://web.wise.live/api/v1/payments/payment_order/${orderId}/callback`, {
+      method: 'GET',
+      credentials: 'omit',
+    });
+    const json = await res.json();
+    const data = json.data || json;
+    const status = (data.status || data.payment_status || data.state || '').toString().toUpperCase();
+    const ok = ['SUCCESS', 'PAID', 'COMPLETED', 'CAPTURED', 'SUCCEEDED'].some(k => status.includes(k));
+    render(ok, status, ok ? 'Your booking is being confirmed.' : `Current status: ${status || 'unknown'}.`);
+  } catch (e) {
+    render(false, '', 'Could not reach the verification service. Please contact support.');
+  }
+})();
+</script>
+</body>
+</html>
