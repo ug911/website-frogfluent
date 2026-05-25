@@ -44,8 +44,8 @@ def page(title, active, body, extra_head=""):
       {nav_html(active)}
     </nav>
     <div class="header-actions">
-      <a href="#" class="btn btn-outline">Tutor Login</a>
-      <a href="#" class="btn btn-primary">Student Login</a>
+      <a href="https://frogfluent-sample.wise.live/signup" target="_blank" rel="noopener" class="btn btn-outline">Tutor Login</a>
+      <a href="https://frogfluent-sample.wise.live/signup" target="_blank" rel="noopener" class="btn btn-primary">Student Login</a>
     </div>
     <button class="mobile-toggle" aria-label="Menu">☰</button>
   </div>
