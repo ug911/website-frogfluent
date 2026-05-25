@@ -1,9 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
     { "source": "/payment_status/(.*)", "destination": "/payment_status.html" }
+  ],
+  "redirects": [
+    { "source": "/tutor-details", "destination": "/tutor-details.html" },
+    { "source": "/tutors", "destination": "/tutors.html" },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/become-tutor", "destination": "/become-tutor.html" }
   ],
   "headers": [
     {
